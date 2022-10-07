@@ -1,129 +1,127 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+import pygame
+import time
+import random
 
-# C extensions
-*.so
+snakeSpeed = 24
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# Size of window
+width = 720
+height = 480
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+# Colors
+black = pygame.Color(0, 0, 0)
+white = pygame.Color(255, 255, 255)
+red = pygame.Color(255, 0, 0)
+green = pygame.Color(0, 255, 0)
+blue = pygame.Color(0, 0, 255)
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Initializing
+pygame.init()
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
+# Game window
+pygame.display.set_caption("Snake Project")
+window = pygame.display.set_mode((width, height))
 
-# Translations
-*.mo
-*.pot
+# fps
+FPS = pygame.time.Clock()
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+# Default snake position
+snakePOS = [100, 50]
 
-# Flask stuff:
-instance/
-.webassets-cache
+# Block of snake body
+snakeBody = [[100, 50], [90, 50], [80, 50], [70, 50]]
 
-# Scrapy stuff:
-.scrapy
+fruitPOS = [random.randrange(1, (width // 10 )) * 10, random.randrange(1, height // 10) * 10]
 
-# Sphinx documentation
-docs/_build/
+spawn = True
 
-# PyBuilder
-target/
+direction = 'RIGHT'
+changeTo = direction
 
-# Jupyter Notebook
-.ipynb_checkpoints
+score = 0 # Initial score
 
-# IPython
-profile_default/
-ipython_config.py
+def showScore(choice, color, font, size):
+    scoreFont = pygame.font.SysFont(font, size)
+    scoreSurface = scoreFont.render('Score:' + str(score), True, color)
+    scoreRect = scoreSurface.get_rect()
+    window.blit(scoreSurface, scoreRect)
 
-# pyenv
-.python-version
+def gameOver():
+    font = pygame.font.SysFont('times new roman', 50)
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+    #Surface for gamveover
+    gameOverSurface = font.render('Score is:' + str(score), True, red)
+    gameOverRect = gameOverSurface.get_rect()
+    gameOverRect.midtop = (width / 2, height / 4)
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
-__pypackages__/
+    window.blit(gameOverSurface, gameOverRect)
+    pygame.display.flip()
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
+    time.sleep(2)
+    pygame.quit()
 
-# SageMath parsed files
-*.sage.py
+    quit()
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# Main code
+while True:
 
-# Spyder project settings
-.spyderproject
-.spyproject
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                changeTo = 'UP'
+            if event.key == pygame.K_DOWN:
+                changeTo = 'DOWN'
+            if event.key == pygame.K_LEFT:
+                changeTo = 'LEFT'
+            if event.key == pygame.K_RIGHT:
+                changeTo = 'RIGHT'
 
-# Rope project settings
-.ropeproject
+    if changeTo == 'UP' and direction != 'DOWN':
+        direction = 'UP'
+    if changeTo == 'DOWN' and direction != 'UP':
+        direction = 'DOWN'
+    if changeTo == 'LEFT' and direction != 'RIGHT':
+        direction = 'LEFT'
+    if changeTo == 'RIGHT' and direction != 'LEFT':
+        direction = 'RIGHT'
 
-# mkdocs documentation
-/site
+    if direction == 'UP':
+        snakePOS[1] -= 10
+    if direction == 'DOWN':
+        snakePOS[1] += 10
+    if direction == 'LEFT':
+        snakePOS[0] -= 10
+    if direction == 'RIGHT':
+        snakePOS[0] += 10
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+    snakeBody.insert(0, list(snakePOS))
+    if snakePOS[0] == fruitPOS[0] and snakePOS[1] == fruitPOS[1]:
+        score += 10
+        spawn = False
+    else:
+        snakeBody.pop()
 
-# Pyre type checker
-.pyre/
+    if not spawn:
+        fruitPOS = [random.randrange(1, (width // 10)) * 10, random.randrange(1, (height // 10)) * 10]
+
+    spawn = True
+    window.fill(black)
+
+    for pos in snakeBody:
+        pygame.draw.rect(window, green, pygame.Rect(pos[0], pos[1], 10, 10))
+
+        pygame.draw.rect(window, white, pygame.Rect(fruitPOS[0], fruitPOS[1], 10, 10))
+
+    if snakePOS[0] < 0 or snakePOS[0] > width - 10:
+        gameOver()
+    if snakePOS[1] < 0 or snakePOS[1] > height - 10:
+        gameOver()
+
+    for block in snakeBody[1:]:
+        if snakePOS [0] == block[0] and snakePOS[1] == block[1]:
+            gameOver()
+
+    showScore(1, white, 'times new roman', 20)
+
+    pygame.display.update()
+    FPS.tick(snakeSpeed)
